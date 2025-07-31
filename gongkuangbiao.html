@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>跑机工况测试表</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --info-color: #1abc9c;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --purple-color: #9b59b6;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --medium-gray: #ddd;
+            --dark-gray: #777;
+            --white: #fff;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --font-size-base: 1rem;
+            --font-size-small: 0.875rem;
+            --font-size-large: 1.25rem;
+            --padding-base: 0.75rem;
+            --padding-small: 0.5rem;
+            --padding-large: 1rem;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            font-size: var(--font-size-base);
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--white);
+            padding: var(--padding-base);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin: 0 0 var(--padding-large) 0;
+            font-size: clamp(1.25rem, 4vw, 1.75rem);
+            padding: 0 var(--padding-small);
+        }
+        
+        .machine-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--padding-small);
+            margin-bottom: var(--padding-large);
+            align-items: center;
+        }
+        
+        .machine-selector select, 
+        .machine-selector button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+        
+        select, input, textarea, button {
+            font-size: var(--font-size-base);
+            font-family: inherit;
+        }
+        
+        .header-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--padding-small);
+            margin-bottom: var(--padding-large);
+        }
+        
+        .header-info > div {
+            flex: 1 1 200px;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-info label {
+            margin-right: var(--padding-small);
+            font-weight: bold;
+            white-space: nowrap;
+            font-size: var(--font-size-small);
+        }
+        
+        .header-info input, 
+        .header-info select {
+            flex: 1;
+            min-width: 0;
+            padding: var(--padding-small);
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+        }
+        
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--padding-small);
+            margin-bottom: var(--padding-large);
+        }
+        
+        .toolbar > div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--padding-small);
+        }
+        
+        .btn {
+            padding: var(--padding-small) var(--padding-base);
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: var(--font-size-small);
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-export {
+            background-color: var(--success-color);
+        }
+        
+        .btn-export-excel {
+            background-color: var(--info-color);
+        }
+        
+        .btn-import {
+            background-color: var(--warning-color);
+        }
+        
+        .btn-delete {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-machine {
+            background-color: var(--purple-color);
+        }
+        
+        .btn-generate {
+            background-color: var(--warning-color);
+        }
+        
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: var(--padding-large);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        th, td {
+            border: 1px solid var(--medium-gray);
+            padding: 0.5rem;
+            text-align: center;
+            font-size: var(--font-size-small);
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        input[type="text"], 
+        select, 
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: var(--font-size-small);
+        }
+        
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            background-color: var(--white);
+            z-index: 100;
+            padding-bottom: var(--padding-small);
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .status {
+            margin-top: var(--padding-small);
+            padding: var(--padding-small);
+            border-radius: 4px;
+            display: none;
+            font-size: var(--font-size-small);
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .action-cell {
+            min-width: 60px;
+        }
+        
+        .machine-tab {
+            display: none;
+        }
+        
+        .machine-tab.active {
+            display: block;
+        }
+        
+        .conclusion-panel {
+            margin-top: var(--padding-large);
+            padding: var(--padding-base);
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
+        
+        .conclusion-panel h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: var(--font-size-large);
+        }
+        
+        .conclusion-text {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: var(--padding-small);
+            font-size: var(--font-size-base);
+        }
+        
+        .custom-title-input {
+            font-weight: bold;
+            text-align: center;
+            background-color: #f2f2f2;
+        }
+        
+        /* 新增样式 */
+        .sequence-input {
+            width: 80px !important;
+            min-width: 80px !important;
+            text-align: center;
+        }
+        
+        .sequence-cell {
+            width: 90px;
+            min-width: 90px;
+        }
+        
+        .data-select {
+            width: 100%;
+            padding: 0.25rem;
+            font-size: var(--font-size-small);
+        }
+        
+        /* 移动设备特定样式 */
+        @media (max-width: 767px) {
+            .container {
+                padding: var(--padding-small);
+            }
+            
+            .machine-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header-info > div {
+                flex: 1 1 100%;
+            }
+            
+            .toolbar > div {
+                flex: 1 1 100%;
+                justify-content: space-between;
+            }
+            
+            .btn {
+                flex: 1 1 auto;
+                padding: 0.5rem;
+            }
+            
+            th, td {
+                padding: 0.25rem;
+            }
+            
+            input[type="text"], 
+            select, 
+            textarea {
+                padding: 0.25rem;
+            }
+            
+            .sequence-input {
+                width: 60px !important;
+                min-width: 60px !important;
+            }
+            
+            .sequence-cell {
+                width: 70px;
+                min-width: 70px;
+            }
+        }
+        
+        /* 平板设备特定样式 */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                padding: var(--padding-base);
+            }
+            
+            .header-info > div {
+                flex: 1 1 45%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>增强版多机工况测试数据管理系统</h1>
+        
+        <div class="machine-selector">
+            <label for="machine-list">选择机器:</label>
+            <select id="machine-list"></select>
+            <button class="btn btn-machine" id="addMachineBtn">添加机器</button>
+            <button class="btn btn-machine" id="removeMachineBtn">删除当前机器</button>
+        </div>
+        
+        <div class="sticky-header">
+            <div class="header-info">
+                <div>
+                    <label for="machine-model">机器型号:</label>
+                    <input type="text" id="machine-model" placeholder="输入机器型号">
+                </div>
+                <div>
+                    <label for="program-version">程序版本号:</label>
+                    <input type="text" id="program-version" placeholder="输入程序版本号">
+                </div>
+                <div>
+                    <label for="material-type">布料类型:</label>
+                    <select id="material-type">
+                        <option value="细布">细布</option>
+                        <option value="粗布">粗布</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="cloth-state">布料状态:</label>
+                    <select id="cloth-state">
+                        <option value="干布">干布</option>
+                        <option value="湿布">湿布</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="test-title">测试标题:</label>
+                    <input type="text" id="test-title" placeholder="自定义测试标题" value="工况测试">
+                </div>
+            </div>
+            
+            <div class="toolbar">
+                <div>
+                    <button class="btn btn-import" id="importBtn">导入数据</button>
+                    <input type="file" id="fileInput" class="file-input" accept=".json,.xlsx,.xls,.csv">
+                    <button class="btn btn-export" id="exportJsonBtn">导出JSON</button>
+                    <button class="btn btn-export-excel" id="exportExcelBtn">导出Excel</button>
+                    <button class="btn" id="addRowBtn">添加行</button>
+                    <button class="btn" id="resetBtn">重置表格</button>
+                    <button class="btn btn-generate" id="generateConclusionBtn">生成测试结论</button>
+                </div>
+                <div>
+                    <button class="btn" id="saveBtn">保存数据</button>
+                </div>
+            </div>
+            
+            <div id="statusMessage" class="status"></div>
+        </div>
+        
+        <div id="machine-tabs-container">
+            <!-- 机器表格将通过JavaScript动态生成 -->
+        </div>
+        
+        <div id="conclusion-container" class="conclusion-panel" style="display: none;">
+            <h3>测试结论</h3>
+            <textarea id="conclusion-text" class="conclusion-text" placeholder="测试结论将在这里生成..."></textarea>
+            <button class="btn btn-export" id="exportConclusionBtn">导出结论</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 全局变量
+            let machines = {};
+            let currentMachineId = null;
+            
+            // 测试结果选项
+            const testResultOptions = [
+                'OK',
+                '掉机-左上', '掉机-左中', '掉机-左下',
+                '掉机-中上', '掉机-中间', '掉机-中下',
+                '掉机-右上', '掉机-右中', '掉机-右下',
+                '漏扫-左上', '漏扫-左中', '漏扫-左下',
+                '漏扫-中上', '漏扫-中间', '漏扫-中下',
+                '漏扫-右上', '漏扫-右中', '漏扫-右下',
+                '挂机-左上', '挂机-左中', '挂机-左下',
+                '挂机-中上', '挂机-中间', '挂机-中下',
+                '挂机-右上', '挂机-右中', '挂机-右下',
+                '顶边-左上', '顶边-左中', '顶边-左下',
+                '顶边-中上', '顶边-中下', '顶边-右上',
+                '顶边-右中', '顶边-右下'
+            ];
+            
+            // 获取DOM元素
+            const machineList = document.getElementById('machine-list');
+            const addMachineBtn = document.getElementById('addMachineBtn');
+            const removeMachineBtn = document.getElementById('removeMachineBtn');
+            const machineModel = document.getElementById('machine-model');
+            const programVersion = document.getElementById('program-version');
+            const materialType = document.getElementById('material-type');
+            const clothState = document.getElementById('cloth-state');
+            const testTitle = document.getElementById('test-title');
+            const importBtn = document.getElementById('importBtn');
+            const exportJsonBtn = document.getElementById('exportJsonBtn');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const fileInput = document.getElementById('fileInput');
+            const addRowBtn = document.getElementById('addRowBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const generateConclusionBtn = document.getElementById('generateConclusionBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const tabsContainer = document.getElementById('machine-tabs-container');
+            const conclusionContainer = document.getElementById('conclusion-container');
+            const conclusionText = document.getElementById('conclusion-text');
+            const exportConclusionBtn = document.getElementById('exportConclusionBtn');
+            
+            // 初始化机器管理
+            function initMachineManagement() {
+                // 从本地存储加载机器数据
+                const savedMachines = localStorage.getItem('machineTestData_machines');
+                if (savedMachines) {
+                    machines = JSON.parse(savedMachines);
+                    
+                    // 为每台机器初始化表格
+                    for (const machineId in machines) {
+                        createMachineTab(machineId);
+                    }
+                    
+                    // 设置当前机器
+                    if (Object.keys(machines).length > 0) {
+                        currentMachineId = Object.keys(machines)[0];
+                        updateMachineSelection();
+                        loadMachineData(currentMachineId);
+                    } else {
+                        addNewMachine();
+                    }
+                } else {
+                    // 如果没有保存的数据，创建第一台机器
+                    addNewMachine();
+                }
+            }
+            
+            // 添加新机器
+            function addNewMachine() {
+                const machineId = 'machine_' + Date.now();
+                const defaultName = `机器${Object.keys(machines).length + 1}`;
+                
+                machines[machineId] = {
+                    name: defaultName,
+                    machineModel: '',
+                    programVersion: '',
+                    materialType: '细布',
+                    clothState: '干布',
+                    testTitle: '工况测试',
+                    data: {
+                        rows: [
+                            ['第一遍', '', '', '', '', '', '', '', '', '', '', ''],
+                            ['第二遍', '', '', '', '', '', '', '', '', '', '', ''],
+                            ['第三遍', '', '', '', '', '', '', '', '', '', '', ''],
+                            ['第四遍', '', '', '', '', '', '', '', '', '', '', ''],
+                            ['第五遍', '', '', '', '', '', '', '', '', '', '', '']
+                        ]
+                    },
+                    conclusion: ''
+                };
+                
+                createMachineTab(machineId);
+                currentMachineId = machineId;
+                updateMachineSelection();
+                saveMachinesToLocalStorage();
+                loadMachineData(machineId);
+                
+                showStatus(`已添加新机器: ${defaultName}`, 'success');
+            }
+            
+            // 创建机器标签页
+            function createMachineTab(machineId) {
+                // 添加到机器选择下拉框
+                const option = document.createElement('option');
+                option.value = machineId;
+                option.textContent = machines[machineId].name;
+                machineList.appendChild(option);
+                
+                // 创建表格容器
+                const tabDiv = document.createElement('div');
+                tabDiv.id = `tab-${machineId}`;
+                tabDiv.className = 'machine-tab';
+                tabsContainer.appendChild(tabDiv);
+                
+                // 创建表格HTML（调整了列顺序，操作列放在最后）
+                tabDiv.innerHTML = `
+                    <div class="table-responsive">
+                        <table id="dataTable-${machineId}">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="sequence-cell">序号</th>
+                                    <th colspan="11" class="test-title-header">${machines[machineId].testTitle}</th>
+                                    <th rowspan="2" class="action-cell">操作</th>
+                                </tr>
+                                <tr>
+                                    <th>2+2*10mm</th>
+                                    <th>3+3*10mm</th>
+                                    <th>4+4*10mm</th>
+                                    <th>5+5*10mm</th>
+                                    <th>6*9mm</th>
+                                    <th>10*10mm</th>
+                                    <th>7*17mm</th>
+                                    <th>15*15mm</th>
+                                    <th>10+10*17</th>
+                                    <th>有框</th>
+                                    <th>无框</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 行数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                // 初始化表格数据
+                renderTableData(machineId);
+            }
+            
+            // 渲染表格数据
+            function renderTableData(machineId) {
+                const tbody = document.querySelector(`#dataTable-${machineId} tbody`);
+                tbody.innerHTML = '';
+                
+                machines[machineId].data.rows.forEach((rowData, rowIndex) => {
+                    const row = document.createElement('tr');
+                    
+                    // 1. 添加序号单元格
+                    const seqCell = document.createElement('td');
+                    seqCell.className = 'sequence-cell';
+                    const seqInput = document.createElement('input');
+                    seqInput.type = 'text';
+                    seqInput.className = 'sequence-input';
+                    seqInput.value = rowData[0] || `第${rowIndex + 1}遍`;
+                    seqInput.readOnly = true;
+                    seqCell.appendChild(seqInput);
+                    row.appendChild(seqCell);
+                    
+                    // 2. 添加数据单元格 (2+2*10mm 到 无框)
+                    for (let i = 1; i < 12; i++) { // 共11个数据列
+                        const cell = document.createElement('td');
+                        const select = document.createElement('select');
+                        select.className = 'data-select';
+                        
+                        // 添加默认空选项
+                        const emptyOption = document.createElement('option');
+                        emptyOption.value = '';
+                        emptyOption.textContent = '';
+                        select.appendChild(emptyOption);
+                        
+                        // 添加所有测试结果选项
+                        testResultOptions.forEach(option => {
+                            const optElement = document.createElement('option');
+                            optElement.value = option;
+                            optElement.textContent = option;
+                            if (rowData[i] === option) {
+                                optElement.selected = true;
+                            }
+                            select.appendChild(optElement);
+                        });
+                        
+                        // 如果有自定义值不在选项中，也添加进去
+                        if (rowData[i] && !testResultOptions.includes(rowData[i])) {
+                            const customOption = document.createElement('option');
+                            customOption.value = rowData[i];
+                            customOption.textContent = rowData[i];
+                            customOption.selected = true;
+                            select.appendChild(customOption);
+                        }
+                        
+                        cell.appendChild(select);
+                        row.appendChild(cell);
+                    }
+                    
+                    // 3. 添加操作单元格 (最后一列)
+                    const actionCell = document.createElement('td');
+                    actionCell.className = 'action-cell';
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-delete delete-row';
+                    deleteBtn.textContent = '删除';
+                    actionCell.appendChild(deleteBtn);
+                    row.appendChild(actionCell);
+                    
+                    tbody.appendChild(row);
+                });
+                
+                setupDeleteButtons(machineId);
+            }
+            
+            // 设置删除行事件
+            function setupDeleteButtons(machineId) {
+                const deleteButtons = document.querySelectorAll(`#dataTable-${machineId} .delete-row`);
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const row = this.closest('tr');
+                        if (confirm('确定要删除这行数据吗？')) {
+                            row.remove();
+                            updateMachineData(machineId);
+                            initializeSequence(machineId);
+                            showStatus('行已删除', 'success');
+                        }
+                    });
+                });
+            }
+            
+            // 初始化序号列
+            function initializeSequence(machineId) {
+                const tbody = document.querySelector(`#dataTable-${machineId} tbody`);
+                const rows = tbody.rows;
+                for (let i = 0; i < rows.length; i++) {
+                    const seqInput = rows[i].querySelector('.sequence-input');
+                    if (seqInput) {
+                        seqInput.value = `第${i+1}遍`;
+                    }
+                }
+                updateMachineData(machineId);
+            }
+            
+            // 更新当前机器数据
+            function updateMachineData(machineId) {
+                const tbody = document.querySelector(`#dataTable-${machineId} tbody`);
+                machines[machineId].data.rows = Array.from(tbody.rows).map(row => {
+                    const rowData = [];
+                    
+                    // 序号列
+                    const seqInput = row.cells[0].querySelector('input');
+                    rowData.push(seqInput ? seqInput.value : '');
+                    
+                    // 数据列 (2+2*10mm 到 无框)
+                    for (let i = 1; i < 12; i++) {
+                        const select = row.cells[i].querySelector('select');
+                        rowData.push(select ? select.value : '');
+                    }
+                    
+                    return rowData;
+                });
+                saveMachinesToLocalStorage();
+            }
+            
+            // 加载机器数据到表单
+            function loadMachineData(machineId) {
+                const machine = machines[machineId];
+                machineModel.value = machine.machineModel || '';
+                programVersion.value = machine.programVersion || '';
+                materialType.value = machine.materialType || '细布';
+                clothState.value = machine.clothState || '干布';
+                testTitle.value = machine.testTitle || '工况测试';
+                
+                // 更新测试标题显示
+                const titleHeader = document.querySelector(`#dataTable-${machineId} .test-title-header`);
+                if (titleHeader) {
+                    titleHeader.textContent = machine.testTitle || '工况测试';
+                }
+                
+                // 加载结论
+                conclusionText.value = machine.conclusion || '';
+                conclusionContainer.style.display = machine.conclusion ? 'block' : 'none';
+                
+                // 激活当前标签页
+                document.querySelectorAll('.machine-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`#tab-${machineId}`).classList.add('active');
+                
+                showStatus(`已切换到机器: ${machine.name}`, 'success');
+            }
+            
+            // 保存机器信息
+            function saveMachineInfo() {
+                if (currentMachineId) {
+                    machines[currentMachineId].machineModel = machineModel.value;
+                    machines[currentMachineId].programVersion = programVersion.value;
+                    machines[currentMachineId].materialType = materialType.value;
+                    machines[currentMachineId].clothState = clothState.value;
+                    machines[currentMachineId].testTitle = testTitle.value;
+                    
+                    // 更新测试标题显示
+                    const titleHeader = document.querySelector(`#dataTable-${currentMachineId} .test-title-header`);
+                    if (titleHeader) {
+                        titleHeader.textContent = testTitle.value || '工况测试';
+                    }
+                    
+                    saveMachinesToLocalStorage();
+                    updateMachineSelection();
+                    showStatus('机器信息已保存', 'success');
+                }
+            }
+            
+            // 更新机器选择下拉框
+            function updateMachineSelection() {
+                machineList.innerHTML = '';
+                for (const machineId in machines) {
+                    const option = document.createElement('option');
+                    option.value = machineId;
+                    option.textContent = machines[machineId].name;
+                    if (machineId === currentMachineId) {
+                        option.selected = true;
+                    }
+                    machineList.appendChild(option);
+                }
+            }
+            
+            // 保存所有机器数据到本地存储
+            function saveMachinesToLocalStorage() {
+                localStorage.setItem('machineTestData_machines', JSON.stringify(machines));
+            }
+            
+            // 添加新行
+            function addNewRow() {
+                if (currentMachineId) {
+                    const tbody = document.querySelector(`#dataTable-${currentMachineId} tbody`);
+                    const newRow = tbody.insertRow();
+                    const rowNumber = tbody.rows.length;
+                    
+                    // 1. 添加序号单元格
+                    const seqCell = newRow.insertCell();
+                    seqCell.className = 'sequence-cell';
+                    const seqInput = document.createElement('input');
+                    seqInput.type = 'text';
+                    seqInput.className = 'sequence-input';
+                    seqInput.value = `第${rowNumber}遍`;
+                    seqInput.readOnly = true;
+                    seqCell.appendChild(seqInput);
+                    
+                    // 2. 添加数据单元格 (2+2*10mm 到 无框)
+                    for (let i = 0; i < 11; i++) {
+                        const cell = newRow.insertCell();
+                        const select = document.createElement('select');
+                        select.className = 'data-select';
+                        
+                        // 添加默认空选项
+                        const emptyOption = document.createElement('option');
+                        emptyOption.value = '';
+                        emptyOption.textContent = '';
+                        select.appendChild(emptyOption);
+                        
+                        // 添加所有测试结果选项
+                        testResultOptions.forEach(option => {
+                            const optElement = document.createElement('option');
+                            optElement.value = option;
+                            optElement.textContent = option;
+                            select.appendChild(optElement);
+                        });
+                        
+                        cell.appendChild(select);
+                    }
+                    
+                    // 3. 添加操作单元格
+                    const actionCell = newRow.insertCell();
+                    actionCell.className = 'action-cell';
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-delete delete-row';
+                    deleteBtn.textContent = '删除';
+                    actionCell.appendChild(deleteBtn);
+                    
+                    // 设置删除按钮事件
+                    deleteBtn.addEventListener('click', function() {
+                        if (confirm('确定要删除这行数据吗？')) {
+                            newRow.remove();
+                            updateMachineData(currentMachineId);
+                            initializeSequence(currentMachineId);
+                            showStatus('行已删除', 'success');
+                        }
+                    });
+                    
+                    updateMachineData(currentMachineId);
+                    showStatus(`已添加新行: 第${rowNumber}遍`, 'success');
+                }
+            }
+            
+            // 重置表格
+            function resetTable() {
+                if (currentMachineId && confirm('确定要重置当前机器的表格吗？所有未保存的数据将丢失。')) {
+                    machines[currentMachineId].data.rows = [
+                        ['第一遍', '', '', '', '', '', '', '', '', '', '', ''],
+                        ['第二遍', '', '', '', '', '', '', '', '', '', '', ''],
+                        ['第三遍', '', '', '', '', '', '', '', '', '', '', ''],
+                        ['第四遍', '', '', '', '', '', '', '', '', '', '', ''],
+                        ['第五遍', '', '', '', '', '', '', '', '', '', '', '']
+                    ];
+                    renderTableData(currentMachineId);
+                    saveMachinesToLocalStorage();
+                    showStatus('当前机器表格已重置', 'success');
+                }
+            }
+            
+            // 计算统计数据
+            function calculateStatistics(rows) {
+                const stats = {
+                    totalTests: 0,
+                    okCount: 0,
+                    ngCount: 0,
+                    crashCount: 0,
+                    hangCount: 0,
+                    edgeCount: 0,
+                    missCount: 0
+                };
+                
+                // 统计所有数据单元格
+                rows.forEach(row => {
+                    for (let i = 1; i < row.length; i++) { // 跳过序号列
+                        const value = row[i].trim();
+                        if (value) {
+                            stats.totalTests++;
+                            
+                            if (value === 'OK') {
+                                stats.okCount++;
+                            } else if (value.startsWith('掉机')) {
+                                stats.crashCount++;
+                            } else if (value.startsWith('漏扫')) {
+                                stats.missCount++;
+                            } else if (value.startsWith('挂机')) {
+                                stats.hangCount++;
+                            } else if (value.startsWith('顶边')) {
+                                stats.edgeCount++;
+                            }
+                        }
+                    }
+                });
+                
+                // 计算百分比
+                if (stats.totalTests > 0) {
+                    stats.okRate = (stats.okCount / stats.totalTests * 100).toFixed(2);
+                    stats.ngRate = ((stats.totalTests - stats.okCount) / stats.totalTests * 100).toFixed(2);
+                    stats.crashRate = (stats.crashCount / stats.totalTests * 100).toFixed(2);
+                    stats.hangRate = (stats.hangCount / stats.totalTests * 100).toFixed(2);
+                    stats.edgeRate = (stats.edgeCount / stats.totalTests * 100).toFixed(2);
+                    stats.missRate = (stats.missCount / stats.totalTests * 100).toFixed(2);
+                } else {
+                    stats.okRate = stats.ngRate = stats.crashRate = 
+                    stats.hangRate = stats.edgeRate = stats.missRate = '0.00';
+                }
+                
+                return stats;
+            }
+            
+            // 生成测试结论
+            function generateConclusion() {
+                if (currentMachineId) {
+                    const machine = machines[currentMachineId];
+                    const stats = calculateStatistics(machine.data.rows);
+                    
+                    let conclusion = `测试机器: ${machine.name}\n`;
+                    conclusion += `机器型号: ${machine.machineModel || '未填写'}\n`;
+                    conclusion += `程序版本: ${machine.programVersion || '未填写'}\n`;
+                    conclusion += `布料类型: ${machine.materialType || '未填写'}\n`;
+                    conclusion += `布料状态: ${machine.clothState || '未填写'}\n\n`;
+                    conclusion += `测试时间: ${new Date().toLocaleString()}\n\n`;
+                    
+                    conclusion += "测试数据统计:\n";
+                    conclusion += `- 总测试次数: ${stats.totalTests}\n`;
+                    conclusion += `- OK率: ${stats.okRate}% (${stats.okCount}/${stats.totalTests})\n`;
+                    conclusion += `- NG率: ${stats.ngRate}% (${stats.totalTests - stats.okCount}/${stats.totalTests})\n`;
+                    conclusion += `- 掉机概率: ${stats.crashRate}% (${stats.crashCount}/${stats.totalTests})\n`;
+                    conclusion += `- 挂机概率: ${stats.hangRate}% (${stats.hangCount}/${stats.totalTests})\n`;
+                    conclusion += `- 顶边概率: ${stats.edgeRate}% (${stats.edgeCount}/${stats.totalTests})\n`;
+                    conclusion += `- 漏扫率: ${stats.missRate}% (${stats.missCount}/${stats.totalTests})\n\n`;
+                    
+                    conclusion += "测试数据摘要:\n";
+                    machine.data.rows.forEach(row => {
+                        if (row[0] && (row[1] || row[2] || row[3])) { // 如果有数据
+                            conclusion += `${row[0]}: `;
+                            conclusion += `2+2*10mm=${row[1] || '-'}, `;
+                            conclusion += `3+3*10mm=${row[2] || '-'}, `;
+                            conclusion += `4+4*10mm=${row[3] || '-'}\n`;
+                        }
+                    });
+                    
+                    conclusion += "\n测试结论:\n";
+                    conclusion += "1. 根据测试数据，机器在各工况下的表现如下:\n";
+                    
+                    // 根据统计数据生成结论
+                    if (parseFloat(stats.okRate) >= 95) {
+                        conclusion += "   - 整体表现非常优秀，OK率达到95%以上\n";
+                    } else if (parseFloat(stats.okRate) >= 85) {
+                        conclusion += "   - 整体表现良好，OK率达到85%以上\n";
+                    } else if (parseFloat(stats.okRate) >= 70) {
+                        conclusion += "   - 整体表现一般，OK率达到70%以上\n";
+                    } else {
+                        conclusion += "   - 整体表现较差，OK率低于70%\n";
+                    }
+                    
+                    if (parseFloat(stats.crashRate) > 5) {
+                        conclusion += `   - 掉机概率较高(${stats.crashRate}%)，需要检查系统稳定性\n`;
+                    } else if (parseFloat(stats.crashRate) > 0) {
+                        conclusion += `   - 掉机概率(${stats.crashRate}%)在可接受范围内\n`;
+                    }
+                    
+                    if (parseFloat(stats.hangRate) > 5) {
+                        conclusion += `   - 挂机概率较高(${stats.hangRate}%)，需要优化程序性能\n`;
+                    } else if (parseFloat(stats.hangRate) > 0) {
+                        conclusion += `   - 挂机概率(${stats.hangRate}%)在可接受范围内\n`;
+                    }
+                    
+                    if (parseFloat(stats.edgeRate) > 5) {
+                        conclusion += `   - 顶边概率较高(${stats.edgeRate}%)，需要调整机械参数\n`;
+                    } else if (parseFloat(stats.edgeRate) > 0) {
+                        conclusion += `   - 顶边概率(${stats.edgeRate}%)在可接受范围内\n`;
+                    }
+                    
+                    if (parseFloat(stats.missRate) > 5) {
+                        conclusion += `   - 漏扫率较高(${stats.missRate}%)，需要检查传感器和算法\n`;
+                    } else if (parseFloat(stats.missRate) > 0) {
+                        conclusion += `   - 漏扫率(${stats.missRate}%)在可接受范围内\n`;
+                    }
+                    
+                    conclusion += "\n2. 建议:\n";
+                    conclusion += "   - 建议定期进行维护保养\n";
+                    conclusion += "   - 在特定工况下可优化参数设置\n";
+                    
+                    // 保存结论
+                    machines[currentMachineId].conclusion = conclusion;
+                    saveMachinesToLocalStorage();
+                    
+                    // 显示结论
+                    conclusionText.value = conclusion;
+                    conclusionContainer.style.display = 'block';
+                    
+                    showStatus('测试结论已生成', 'success');
+                }
+            }
+            
+            // 导出测试结论
+            function exportConclusion() {
+                if (currentMachineId && conclusionText.value) {
+                    const machine = machines[currentMachineId];
+                    const blob = new Blob([conclusionText.value], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `测试结论_${machine.name}_${machine.machineModel || '未知型号'}_${new Date().toISOString().slice(0, 10)}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showStatus('测试结论已导出', 'success');
+                }
+            }
+            
+            // 导出数据为JSON文件
+            function exportJsonData() {
+                if (currentMachineId) {
+                    const machine = machines[currentMachineId];
+                    const data = {
+                        machineName: machine.name,
+                        machineModel: machine.machineModel,
+                        programVersion: machine.programVersion,
+                        materialType: machine.materialType,
+                        clothState: machine.clothState,
+                        testTitle: machine.testTitle,
+                        rows: machine.data.rows,
+                        conclusion: machine.conclusion
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `机器测试数据_${machine.name}_${machine.machineModel || '未知型号'}_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showStatus('JSON数据已导出', 'success');
+                }
+            }
+            
+            // 导出数据为Excel文件
+            function exportExcelData() {
+                if (currentMachineId) {
+                    const machine = machines[currentMachineId];
+                    const stats = calculateStatistics(machine.data.rows);
+                    
+                    // 创建工作簿
+                    const wb = XLSX.utils.book_new();
+                    
+                    // 准备测试数据工作表
+                    const testData = [
+                        ["机器工况测试数据报表"],
+                        [""],
+                        ["机器名称:", machine.name],
+                        ["机器型号:", machine.machineModel],
+                        ["程序版本号:", machine.programVersion],
+                        ["布料类型:", machine.materialType],
+                        ["布料状态:", machine.clothState],
+                        ["测试标题:", machine.testTitle],
+                        ["导出时间:", new Date().toLocaleString()],
+                        [""],
+                        ["测试统计结果"],
+                        ["总测试次数:", stats.totalTests],
+                        ["OK率:", `${stats.okRate}% (${stats.okCount}/${stats.totalTests})`],
+                        ["NG率:", `${stats.ngRate}% (${stats.totalTests - stats.okCount}/${stats.totalTests})`],
+                        ["掉机概率:", `${stats.crashRate}% (${stats.crashCount}/${stats.totalTests})`],
+                        ["挂机概率:", `${stats.hangRate}% (${stats.hangCount}/${stats.totalTests})`],
+                        ["顶边概率:", `${stats.edgeRate}% (${stats.edgeCount}/${stats.totalTests})`],
+                        ["漏扫率:", `${stats.missRate}% (${stats.missCount}/${stats.totalTests})`],
+                        [""],
+                        ["测试结论"],
+                        ...(machine.conclusion ? machine.conclusion.split('\n').map(line => [line]) : [["无测试结论"]]),
+                        [""],
+                        ["测试数据详情"],
+                        ['序号', '2+2*10mm', '3+3*10mm', '4+4*10mm', '5+5*10mm', 
+                         '6*9mm', '10*10mm', '7*17mm', '15*15mm', '10+10*17', '有框', '无框'],
+                        ...machine.data.rows
+                    ];
+                    
+                    // 创建工作表
+                    const ws = XLSX.utils.aoa_to_sheet(testData);
+                    
+                    // 合并标题单元格
+                    ws['!merges'] = [
+                        { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
+                        { s: { r: 10, c: 0 }, e: { r: 10, c: 11 } },
+                        { s: { r: 18, c: 0 }, e: { r: 18, c: 11 } },
+                        { s: { r: 20 + (machine.conclusion ? machine.conclusion.split('\n').length : 1), c: 0 }, 
+                          e: { r: 20 + (machine.conclusion ? machine.conclusion.split('\n').length : 1), c: 11 } }
+                    ];
+                    
+                    // 设置标题样式
+                    const titleCell = ws['A1'];
+                    titleCell.s = {
+                        font: { bold: true, sz: 16 },
+                        alignment: { horizontal: 'center' }
+                    };
+                    
+                    // 设置统计标题样式
+                    const statsTitleCell = ws['A11'];
+                    statsTitleCell.s = {
+                        font: { bold: true, sz: 14 },
+                        alignment: { horizontal: 'center' }
+                    };
+                    
+                    // 设置结论标题样式
+                    const conclusionTitleCell = ws['A19'];
+                    conclusionTitleCell.s = {
+                        font: { bold: true, sz: 14 },
+                        alignment: { horizontal: 'center' }
+                    };
+                    
+                    // 设置数据标题样式
+                    const dataTitleRow = 20 + (machine.conclusion ? machine.conclusion.split('\n').length : 1);
+                    const dataTitleCell = ws[`A${dataTitleRow}`];
+                    dataTitleCell.s = {
+                        font: { bold: true, sz: 14 },
+                        alignment: { horizontal: 'center' }
+                    };
+                    
+                    // 设置表头样式
+                    for (let i = 0; i < 11; i++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: dataTitleRow + 1, c: i });
+                        if (ws[cellRef]) {
+                            ws[cellRef].s = {
+                                font: { bold: true },
+                                fill: { fgColor: { rgb: "D3D3D3" } }
+                            };
+                        }
+                    }
+                    
+                    // 将工作表添加到工作簿
+                    XLSX.utils.book_append_sheet(wb, ws, "测试数据");
+                    
+                    // 导出Excel文件
+                    XLSX.writeFile(wb, `机器测试数据_${machine.name}_${machine.machineModel || '未知型号'}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                    
+                    showStatus('Excel数据已导出', 'success');
+                }
+            }
+            
+            // 导入数据
+            function importData(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                            // 处理Excel文件
+                            const data = e.target.result;
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            const ws = workbook.Sheets[workbook.SheetNames[0]];
+                            const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                            
+                            // 创建新机器
+                            const machineId = 'machine_' + Date.now();
+                            let machineName = `导入机器_${Object.keys(machines).length + 1}`;
+                            let machineModel = '';
+                            let programVersion = '';
+                            let materialTypeValue = '细布';
+                            let clothStateValue = '干布';
+                            let testTitleValue = '工况测试';
+                            let conclusion = '';
+                            
+                            // 提取元数据
+                            for (let i = 0; i < jsonData.length; i++) {
+                                const row = jsonData[i];
+                                if (row[0] === "机器名称:") machineName = row[1] || machineName;
+                                if (row[0] === "机器型号:") machineModel = row[1] || '';
+                                if (row[0] === "程序版本号:") programVersion = row[1] || '';
+                                if (row[0] === "布料类型:") materialTypeValue = row[1] || '细布';
+                                if (row[0] === "布料状态:") clothStateValue = row[1] || '干布';
+                                if (row[0] === "测试标题:") testTitleValue = row[1] || '工况测试';
+                                if (row[0] === "序号") break;
+                            }
+                            
+                            // 提取测试数据
+                            const headerIndex = jsonData.findIndex(row => row[0] === "序号");
+                            const rows = [];
+                            if (headerIndex >= 0) {
+                                for (let i = headerIndex + 1; i < jsonData.length; i++) {
+                                    if (jsonData[i][0]) { // 确保有序号
+                                        rows.push(jsonData[i]);
+                                    }
+                                }
+                            }
+                            
+                            // 提取结论（如果有）
+                            if (workbook.SheetNames.length > 1 && workbook.SheetNames[1] === "测试结论") {
+                                const wsConclusion = workbook.Sheets["测试结论"];
+                                const conclusionData = XLSX.utils.sheet_to_json(wsConclusion, { header: 1 });
+                                conclusion = conclusionData.map(row => row[0]).join('\n');
+                            }
+                            
+                            machines[machineId] = {
+                                name: machineName,
+                                machineModel: machineModel,
+                                programVersion: programVersion,
+                                materialType: materialTypeValue,
+                                clothState: clothStateValue,
+                                testTitle: testTitleValue,
+                                data: { rows: rows },
+                                conclusion: conclusion
+                            };
+                            
+                            createMachineTab(machineId);
+                            currentMachineId = machineId;
+                            updateMachineSelection();
+                            saveMachinesToLocalStorage();
+                            loadMachineData(machineId);
+                            
+                        } else {
+                            // 处理JSON文件
+                            const data = JSON.parse(e.target.result);
+                            const machineId = 'machine_' + Date.now();
+                            
+                            machines[machineId] = {
+                                name: data.machineName || `导入机器_${Object.keys(machines).length + 1}`,
+                                machineModel: data.machineModel || '',
+                                programVersion: data.programVersion || '',
+                                materialType: data.materialType || '细布',
+                                clothState: data.clothState || '干布',
+                                testTitle: data.testTitle || '工况测试',
+                                data: { rows: data.rows || [] },
+                                conclusion: data.conclusion || ''
+                            };
+                            
+                            createMachineTab(machineId);
+                            currentMachineId = machineId;
+                            updateMachineSelection();
+                            saveMachinesToLocalStorage();
+                            loadMachineData(machineId);
+                        }
+                        
+                        showStatus('数据导入成功', 'success');
+                    } catch (error) {
+                        showStatus('导入失败: ' + error.message, 'error');
+                    }
+                };
+                reader.onerror = function() {
+                    showStatus('文件读取失败', 'error');
+                };
+                
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            }
+            
+            // 删除当前机器
+            function removeCurrentMachine() {
+                if (currentMachineId && confirm(`确定要删除机器 "${machines[currentMachineId].name}" 吗？所有相关数据将永久丢失。`)) {
+                    // 从DOM中移除
+                    document.querySelector(`#tab-${currentMachineId}`).remove();
+                    const option = machineList.querySelector(`option[value="${currentMachineId}"]`);
+                    if (option) option.remove();
+                    
+                    // 从数据中移除
+                    delete machines[currentMachineId];
+                    saveMachinesToLocalStorage();
+                    
+                    // 选择另一台机器或创建新机器
+                    if (Object.keys(machines).length > 0) {
+                        currentMachineId = Object.keys(machines)[0];
+                        loadMachineData(currentMachineId);
+                    } else {
+                        addNewMachine();
+                    }
+                    
+                    showStatus('机器已删除', 'success');
+                }
+            }
+            
+            // 显示状态消息
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status ' + type;
+                setTimeout(() => {
+                    statusMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        statusMessage.className = 'status';
+                        statusMessage.style.opacity = '1';
+                    }, 500);
+                }, 3000);
+            }
+            
+            // 事件监听器
+            machineList.addEventListener('change', function() {
+                currentMachineId = this.value;
+                loadMachineData(currentMachineId);
+            });
+            
+            addMachineBtn.addEventListener('click', addNewMachine);
+            removeMachineBtn.addEventListener('click', removeCurrentMachine);
+            importBtn.addEventListener('click', () => fileInput.click());
+            exportJsonBtn.addEventListener('click', exportJsonData);
+            exportExcelBtn.addEventListener('click', exportExcelData);
+            generateConclusionBtn.addEventListener('click', generateConclusion);
+            exportConclusionBtn.addEventListener('click', exportConclusion);
+            saveBtn.addEventListener('click', function() {
+                saveMachineInfo();
+                if (currentMachineId) {
+                    updateMachineData(currentMachineId);
+                }
+            });
+            addRowBtn.addEventListener('click', addNewRow);
+            resetBtn.addEventListener('click', resetTable);
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    importData(this.files[0]);
+                    this.value = '';
+                }
+            });
+            
+            // 表单字段变更时自动保存机器信息
+            machineModel.addEventListener('change', saveMachineInfo);
+            programVersion.addEventListener('change', saveMachineInfo);
+            materialType.addEventListener('change', saveMachineInfo);
+            clothState.addEventListener('change', saveMachineInfo);
+            testTitle.addEventListener('change', saveMachineInfo);
+            
+            // 初始化
+            initMachineManagement();
+        });
+    </script>
+</body>
+</html>
