@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G哥粉丝群</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+            background-color: #121212; /* 深黑色背景，还原图片 */
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        /* 主容器 */
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 大标题 */
+        h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 40px;
+            color: #888;
+            letter-spacing: 2px;
+        }
+
+        /* 可点击的图标区域 */
+        .icon-box {
+            display: inline-block;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .icon-box:hover {
+            transform: scale(1.05);
+        }
+
+        .icon-circle {
+            width: 120px;
+            height: 120px;
+            background-color: #2c3e50;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 5px solid #34495e;
+        }
+
+        .icon-logo {
+            font-size: 60px;
+            color: #108ee9; /* QQ的经典蓝色 */
+            transition: color 0.3s;
+        }
+
+        .icon-box:hover .icon-logo {
+            color: #11a658; /* 鼠标悬停变绿 */
+        }
+
+        /* 按钮样式 (模仿微信/APP扫码按钮) */
+        .scan-btn {
+            background: linear-gradient(135deg, #07c160, #059b4c);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.1s;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(7, 193, 96, 0.3);
+        }
+
+        .scan-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* --- 模态框样式 (弹出层) --- */
+        .modal {
+            display: none; /* 默认隐藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 群信息 */
+        .group-info h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .group-info p {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* 二维码图片 */
+        .qr-image {
+            width: 260px;
+            height: 260px;
+            margin: 0 auto;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            background-color: #fff; /* 保证二维码白底 */
+            padding: 5px;
+        }
+
+        /* 关闭按钮 */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        /* 底部提示 */
+        .footer-tip {
+            margin-top: 30px;
+            color: #555;
+            font-size: 12px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 顶部提示文字 -->
+        <h1>欢迎加入 G哥大家庭</h1>
+
+        <!-- 点击区域 -->
+        <div class="icon-box" onclick="openModal()">
+            <div class="icon-circle">
+                <!-- 这里使用了一个简单的SVG QQ图标，也可以换成你自己的图片 -->
+                <svg class="icon-logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="60" height="60">
+                    <path d="M512 128c-212.1 0-384 171.9-384 384s171.9 384 384 384 384-171.9 384-384S724.1 128 512 128zm0 704c-176.7 0-320-143.3-320-320S335.3 192 512 192s320 143.3 320 320-143.3 320-320 320z"/>
+                    <path d="M448 384a64 64 0 1 0 128 0 64 64 0 1 0-128 0z"/>
+                    <path d="M320 512h384v64H320z"/>
+                </svg>
+            </div>
+        </div>
+
+        <button class="scan-btn" onclick="openModal()">点击加入群聊</button>
+        <div class="footer-tip">© G哥粉丝群 版权所有</div>
+    </div>
+
+    <!-- 模态框 HTML 结构 -->
+    <div id="qrModal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <!-- 关闭按钮 -->
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+
+            <div class="group-info">
+                <h2>G哥粉丝群</h2>
+                <p>群号: <strong style="color:#fff;font-size:18px;">642740098</strong></p>
+                <p style="color:#07c160;font-weight:bold;">请保存二维码并使用QQ扫描</p>
+            </div>
+
+            <!-- 这里放你的二维码图片，建议将图片上传到图床后替换 src 链接 -->
+            <img src="https://s41.ax1x.com/2026/01/21/pZc9JsK.jpg" alt="QQ群二维码" class="qr-image">
+
+            <button class="scan-btn" style="margin-top:20px;" onclick="downloadQR()">保存二维码图片</button>
+        </div>
+    </div>
+
+    <script>
+        // 获取模态框元素
+        const modal = document.getElementById('qrModal');
+
+        // 打开模态框
+        function openModal() {
+            modal.style.display = 'flex';
+            // 防止滚动穿透
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 点击外部关闭 (可选)
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // 按下 Esc 键关闭
+        document.onkeydown = function(evt) {
+            evt = evt || window.event;
+            if (evt.keyCode == 27) {
+                closeModal();
+            }
+        };
+
+        // 模拟保存图片（实际开发中需替换为真实图片链接）
+        function downloadQR() {
+            // 这里只是一个提示，实际需要后端支持或使用 canvas 生成图片下载
+            alert('提示：由于这是演示代码，图片链接为占位图。\n请在代码中替换真实的二维码图片地址。');
+        }
+    </script>
+</body>
+</html>
